@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -32,32 +32,34 @@ func main() {
 }
 
 func getPriceHandler(w http.ResponseWriter, r *http.Request) {
-	rate, err := getPrice()
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	ctxPrice, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
-	err = persistRate(ctx, rate)
+	rate, err := getPrice(ctxPrice)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ctxPersist, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	defer cancel()
+	err = persistRate(ctxPersist, rate)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(rate.USDBRL.Price)
 }
 
-func getPrice() (*Rate, error) {
+func getPrice(ctx context.Context) (*Rate, error) {
 	type item struct {
 		body []byte
 		err  error
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
-	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET",
 		"https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
@@ -71,7 +73,7 @@ func getPrice() (*Rate, error) {
 			return
 		}
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body) //Deprecated
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			c <- item{nil, err}
 			return
@@ -114,6 +116,7 @@ func persistRate(ctx context.Context, rate *Rate) error {
 		}
 		c <- nil
 	}()
+
 	select {
 	case err := <-c:
 		if err != nil {

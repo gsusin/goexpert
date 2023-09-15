@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +21,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//defer req.Body.Close()
 	c := make(chan item)
 	go func() {
 		resp, err := http.DefaultClient.Do(req)
@@ -30,13 +29,14 @@ func main() {
 			return
 		}
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			c <- item{nil, err}
 			return
 		}
 		c <- item{body, nil}
 	}()
+
 	var body []byte
 	select {
 	case i := <-c:
@@ -49,10 +49,10 @@ func main() {
 		log.Println(ctx.Err())
 		return
 	}
-
 	if len(body) == 0 {
 		return
 	}
+
 	var p string
 	err = json.Unmarshal(body, &p)
 	if err != nil {

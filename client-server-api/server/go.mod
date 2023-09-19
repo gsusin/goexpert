@@ -1,4 +1,4 @@
-module github.com/gsusin/goexpert/client-server-api
+module github.com/gsusin/goexpert/client-server-api/server
 
 go 1.18
 

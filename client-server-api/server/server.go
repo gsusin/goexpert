@@ -22,13 +22,21 @@ type Rate struct {
 var db *sql.DB
 
 func main() {
+	init_db()
+	http.HandleFunc("/cotacao", getPriceHandler)
+	http.ListenAndServe(":8080", nil)
+}
+
+func init_db() {
 	var err error
 	db, err = sql.Open("sqlite", "./exchange.db")
 	if err != nil {
 		panic(err)
 	}
-	http.HandleFunc("/cotacao", getPriceHandler)
-	http.ListenAndServe(":8080", nil)
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS rate (timestamp TEXT, price TEXT)")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func getPriceHandler(w http.ResponseWriter, r *http.Request) {

@@ -7,16 +7,59 @@ import (
 	"time"
 )
 
-// https://pkg.go.dev/context@go1.21.3#WithValue
-
 func TestFastestApicep(t *testing.T) {
-	ctx, cancel1 := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel1()
-	//	d := delay{}
-	ctx = context.WithValue(ctx, delayContextKey("delayPlan"), viacepDelay(5*time.Second))
-	a, err := QueryFastest(ctx, "88037-500")
-	assert.Nil(t, err)
-	assert.NotNil(t, a)
-	aTyped := a.(Apicep)
-	assert.Equal(t, aTyped.City, "Florianópolis")
+	v, err := delayedQueryFastest("88010-100", viacepId)
+	as := assert.New(t)
+	as.Nil(err)
+	as.NotNil(v)
+	result := v.(Apicep)
+	if !as.Truef(result.Ok, "API apicep.com returned error. Status: %d", result.Status) {
+		return
+	}
+	as.Equal("Florianópolis", result.City)
+}
+
+func TestFastestViacep(t *testing.T) {
+	v, err := delayedQueryFastest("88010-100", apicepId)
+	as := assert.New(t)
+	as.Nil(err)
+	as.NotNil(v)
+	result := v.(Viacep)
+	if !as.False(result.Erro) {
+		return
+	}
+	as.Equal("Florianópolis", result.Localidade)
+}
+
+func TestNonexistentApicep(t *testing.T) {
+	v, err := delayedQueryFastest("88000-000", viacepId)
+	as := assert.New(t)
+	as.Nil(err)
+	as.NotNil(v)
+	result := v.(Apicep)
+	as.Equal(404, result.Status)
+}
+
+func TestNonexistentViacep(t *testing.T) {
+	v, err := delayedQueryFastest("88000-000", apicepId)
+	as := assert.New(t)
+	as.Nil(err)
+	as.NotNil(v)
+	result := v.(Viacep)
+	as.True(result.Erro)
+}
+
+func TestInvalidViacep(t *testing.T) {
+	_, err := delayedQueryFastest("88000", apicepId)
+	as := assert.New(t)
+	as.NotNil(err)
+	as.Equal("StatusBadRequest", err.Error())
+}
+
+func delayedQueryFastest(cep string, delayedApiId uint8) (any, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ctx = context.WithValue(ctx, delayContextKey("delayPlan"), queryDelay{5 * time.Second, delayedApiId})
+	v, err := QueryFastest(ctx, cep)
+	return v, err
 }

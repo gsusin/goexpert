@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"net/http"
@@ -44,16 +45,19 @@ func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 			city = result.Localidade
 		}
 	}
-
 	if responseCode == 404 {
 		return 404, []byte("can not find zipcode")
 	}
 
-	configs, err := LoadConfig(".")
-	if err != nil {
-		log.Fatal("Error loading config: ", err)
+	_, err = LoadConfig(".")
+	//if err != nil {
+	//log.Fatal("Error loading config: ", err)
+	//}
+	//key := configs.Key
+	key := viper.GetString("KEY")
+	if key == "" {
+		log.Fatal("Couldn't read key")
 	}
-	key := configs.Key
 
 	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", key, url.QueryEscape(city))
 	req, err := http.NewRequest("GET", url, nil)

@@ -12,13 +12,6 @@ import (
 	"time"
 )
 
-func keepNumerals(r rune) rune {
-	if r >= '0' && r <= '9' {
-		return r
-	}
-	return -1
-}
-
 func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 
 	cep := r.FormValue("cep")
@@ -58,7 +51,7 @@ func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 
 	configs, err := LoadConfig(".")
 	if err != nil {
-		log.Fatal("Error loadin config: ", err)
+		log.Fatal("Error loading config: ", err)
 	}
 	key := configs.Key
 
@@ -91,4 +84,11 @@ func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 		log.Fatal("Json marshaling failed: ", err)
 	}
 	return 200, []byte(answer)
+}
+
+func keepNumerals(r rune) rune {
+	if r >= '0' && r <= '9' {
+		return r
+	}
+	return -1
 }

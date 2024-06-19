@@ -13,11 +13,11 @@ func ValidateCepAndForward(ctx context.Context, w http.ResponseWriter, r *http.R
 
 	tr := otel.GetTracerProvider().Tracer("component-serviceA")
 	_, span := tr.Start(ctx, "serviceA")
-	cep := r.Header.Get("cep")
+	cep := r.FormValue("cep")
 	cep = strings.Map(keepNumerals, cep)
 	if len(cep) != 8 {
 		w.WriteHeader(422)
-		w.Write([]byte("invalid zipcode"))
+		w.Write([]byte(cep))
 		return
 	}
 	f(ctx, w, cep)

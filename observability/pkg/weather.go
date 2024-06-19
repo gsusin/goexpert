@@ -18,7 +18,7 @@ func GetTemperature(cep string) (int, []byte) {
 
 	cep = strings.Map(keepNumerals, cep)
 	if len(cep) != 8 {
-		return 422, []byte("invalid zipcode")
+		return 422, []byte("invalid Zipcode")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -70,6 +70,7 @@ func GetTemperature(cep string) (int, []byte) {
 
 	var temperature struct {
 		Current struct {
+			City   string  `json:"city"`
 			Temp_c float32 `json:"temp_C"`
 			Temp_f float32 `json:"temp_F"`
 			Temp_k float32 `json:"temp_K"`
@@ -78,12 +79,13 @@ func GetTemperature(cep string) (int, []byte) {
 	if err := json.Unmarshal(body, &temperature); err != nil {
 		log.Fatal("Json unmarshaling failed ", err)
 	}
+	temperature.Current.City = city
 	temperature.Current.Temp_k = temperature.Current.Temp_c + 273
 	answer, err := json.Marshal(temperature)
 	if err != nil {
 		log.Fatal("Json marshaling failed: ", err)
 	}
-	return 200, []byte(answer)
+	return 200, answer
 }
 
 func keepNumerals(r rune) rune {

@@ -12,7 +12,9 @@ Configure no arquivo .env:
 
     docker-compose up --build --detach zipkin-collector zipkin-client
     
-2. Faça um POST em http://localhost:8080/temp, passando um CEP válido no parâmetro "cep"
+2. Faça um POST em http://localhost:8080/temp, passando um CEP válido no parâmetro "cep":
+
+    curl -d 'cep=89222540' http://localhost:8080/temp
 
 3. Verifique nos logs o traceId:
 

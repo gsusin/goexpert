@@ -12,6 +12,8 @@ func ShowTemperature(ctx context.Context, w http.ResponseWriter, cep string) {
 	_, span := tr.Start(ctx, "serviceB")
 	code, body := weather.GetTemperature(cep)
 	span.End()
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(code)
-	w.Write([]byte(body))
+	w.Write(body)
 }

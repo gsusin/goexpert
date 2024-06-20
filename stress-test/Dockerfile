@@ -2,6 +2,6 @@ FROM golang:latest
 
 WORKDIR /app
 
-CMD ["tail", "-f", "/dev/null"]
+COPY . . 
 
-
+RUN GOOS=linux go build -o stress-test .

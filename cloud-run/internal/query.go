@@ -31,7 +31,7 @@ type Viacep struct {
 	Gia         string
 	Ddd         string
 	Siafi       string
-	Erro        bool
+	Erro        string
 }
 
 const (

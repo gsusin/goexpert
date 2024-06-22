@@ -39,7 +39,7 @@ func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 			city = result.City
 		}
 	case Viacep:
-		if result.Erro {
+		if len(result.Erro) > 0 {
 			responseCode = 404
 		} else {
 			city = result.Localidade

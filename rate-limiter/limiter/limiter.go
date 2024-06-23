@@ -2,42 +2,59 @@ package limiter
 
 import (
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 )
 
 type LimitedHandler struct {
-	access          map[string]int
+	AccessStorage
+	AccessState
+}
+
+type AccessStorage interface {
+	SetZero(ip string)
+	Increment(ip string)
+	Get(ip string) int
+}
+
+type AccessState struct {
 	periodInSeconds int
 	limitOfRequests int
 	start           time.Time
-	//Add to .env
-	blockInSeconds int
-	blockStart     time.Time
-	isBlocked      bool
-	//Add to .env
-	tokens      [2]string
-	tokenLimits [2]int
+	blockInSeconds  int
+	blockStart      time.Time
+	isBlocked       bool
+	tokens          [2]string
+	tokenLimits     [2]int
 }
 
-func NewLimitedHandler() *LimitedHandler {
-	configs, err := LoadConfig(".")
+func NewLimitedHandler(as AccessStorage) *LimitedHandler {
+	_, filename, _, _ := runtime.Caller(0)
+	rootPath := filepath.Join(filepath.Dir(filename), "..")
+	configs, err := LoadConfig(rootPath)
 	if err != nil {
 		panic(err)
 	}
 
 	period, _ := strconv.Atoi(configs.PeriodInSeconds)
 	limit, _ := strconv.Atoi(configs.LimitOfRequests)
+	block, _ := strconv.Atoi(configs.BlockInSeconds)
+	tokenLimit1, _ := strconv.Atoi(configs.TokenLimit1)
+	tokenLimit2, _ := strconv.Atoi(configs.TokenLimit2)
 	return &LimitedHandler{
-		make(map[string]int),
-		period,
-		limit,
-		time.Now(),
-		1,
-		time.Time{},
-		false,
-		[2]string{"HIGH", "LOW"},
-		[2]int{20, 15},
+		as,
+		AccessState{
+			period,
+			limit,
+			time.Now(),
+			block,
+			time.Time{},
+			false,
+			[2]string{"HIGH", "LOW"},
+			[2]int{tokenLimit1, tokenLimit2},
+		},
 	}
 }
 
@@ -60,17 +77,17 @@ func (lh *LimitedHandler) LimitedFunc(w http.ResponseWriter, r *http.Request, f 
 
 	if (*lh).periodIsExpired() {
 		lh.start = time.Now()
-		lh.access[ip] = 0
+		lh.SetZero(ip)
 	}
 
-	lh.access[ip]++
+	lh.Increment(ip)
 	switch {
-	case !lh.isBlocked && lh.access[ip] > maxRequests:
+	case !lh.isBlocked && lh.Get(ip) > maxRequests:
 		lh.blockStart = time.Now()
 		lh.isBlocked = true
 		return blockedFunc
 	case lh.isBlocked && (*lh).blockIsExpired():
-		lh.access[ip] = 0
+		lh.SetZero(ip)
 		lh.isBlocked = false
 		return f
 	case lh.isBlocked:

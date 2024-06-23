@@ -8,9 +8,10 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	LS := LimitedServer{}
-	LS.lim = limiter.NewLimitedHandler()
-	mux.HandleFunc("/course", LS.LimitedGetCourseId)
+	ls := LimitedServer{}
+	as := limiter.NewRedisStorage()
+	ls.lim = limiter.NewLimitedHandler(&as)
+	mux.HandleFunc("/course", ls.LimitedGetCourseId)
 	http.ListenAndServe(":8080", mux)
 }
 
@@ -24,5 +25,4 @@ func (ls *LimitedServer) LimitedGetCourseId(w http.ResponseWriter, r *http.Reque
 
 func GetCourseId(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Course queried"))
-	println("API_KEY = ", r.Header.Get("API_KEY"))
 }

@@ -23,9 +23,10 @@ func GetCourseId(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	mux := http.NewServeMux()
-	LS := LimitedServer{}
-	LS.lim = limiter.NewLimitedHandler()
-	mux.HandleFunc("/course", LS.LimitedGetCourseId)
+	ls := LimitedServer{}
+	as := limiter.NewMemoryStorage()
+	ls.lim = limiter.NewLimitedHandler(&as)
+	mux.HandleFunc("/course", ls.LimitedGetCourseId)
 	go http.ListenAndServe(":8080", mux)
 }
 

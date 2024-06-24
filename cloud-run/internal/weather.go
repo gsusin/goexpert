@@ -34,6 +34,7 @@ func GetTemperature(w http.ResponseWriter, r *http.Request) (int, []byte) {
 	switch result := v.(type) {
 	case Apicep:
 		if !result.Ok {
+			log.Printf("Apicep: %s %d", result.StatusText, result.Status)
 			responseCode = 404
 		} else {
 			city = result.City

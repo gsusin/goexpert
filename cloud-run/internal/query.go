@@ -99,13 +99,14 @@ func QueryFastest(ctx context.Context, cep string) (any, error) {
 
 	for {
 		select {
-		case v := <-ce:
-			return nil, v
+		case <-ce:
+			continue
 		case v := <-c1:
 			if !v.Ok {
 				if v.Status == 200 {
 					return v, nil
 				}
+				continue
 			}
 			return v, nil
 		case v := <-c2:

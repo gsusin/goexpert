@@ -1,17 +1,37 @@
-# Uso
+# Uso local
 
-Aplicação rodando no Google Cloud Run:
+1. Configurar a chave do WeatherAPI no arquivo .env:
+```
+    KEY=xxxxxxxxxxxxxxxx
+```
 
-    https://prod2-jph2uutbfq-rj.a.run.app
+2. Subir o serviço:
+```
+    docker-compose up -d
+```
 
-Fazer um POST em "/temp" passando o parâmetro "cep":
-
-    curl -d 'cep=89222540' -i https://prod2-jph2uutbfq-rj.a.run.app/temp
+3. Fazer um POST na posta 8080 em "/temp" passando o parâmetro "cep":
+```
+    curl -d 'cep=89222540' -i http://localhost:8080/temp
+```
 
 # Deploy no CloudRun
 
-1. Configure a chave do WeatherAPI no arquivo .env:
-
+1. Configurar a chave do WeatherAPI no arquivo .env:
+```
     KEY=xxxxxxxxxxxxxxxx
+```
 
 2. Fazer build/push/deploy no CloudRun.
+
+# Uso do serviço rodando
+
+Serviço rodando no Google Cloud Run:
+```
+    https://prod2-jph2uutbfq-rj.a.run.app
+```
+
+1. Fazer um POST em "/temp" passando o parâmetro "cep":
+```
+    curl -d 'cep=89222540' -i https://prod2-jph2uutbfq-rj.a.run.app/temp
+```

@@ -1,0 +1,9 @@
+services:
+  temperature:
+    build:
+      dockerfile: $PWD/Dockerfile
+      context: .
+    command:
+      - "./cloudrun"
+    ports: 
+      - "8080:8080"

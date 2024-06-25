@@ -10,7 +10,7 @@
     docker-compose up -d
 ```
 
-3. Fazer um POST na posta 8080 em "/temp" passando o parâmetro "cep":
+3. Fazer um POST na porta 8080 em "/temp" passando o parâmetro "cep":
 ```
     curl -d 'cep=89222540' -i http://localhost:8080/temp
 ```

@@ -40,7 +40,7 @@ func serviceA(w http.ResponseWriter, r *http.Request) {
 
 	tr := otel.GetTracerProvider().Tracer("component-main")
 	ctx, span := tr.Start(ctx, "main", trace.WithSpanKind(trace.SpanKindServer))
-	web.ValidateCepAndForward(ctx, w, r, web.ShowTemperature)
+	web.ValidateCepAndForward(ctx, &w, r, web.ShowTemperature)
 	span.End()
 }
 

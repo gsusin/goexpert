@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gsusin/goexpert/observability/configs"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
 	"io"
 	"log"
 	"net/http"
@@ -14,18 +15,21 @@ import (
 	"time"
 )
 
-func GetTemperature(cep string) (int, []byte) {
+func GetTemperature(ctx context.Context, cep string) (int, []byte) {
 
 	cep = strings.Map(keepNumerals, cep)
 	if len(cep) != 8 {
 		return 422, []byte("invalid Zipcode")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
+	tr := otel.GetTracerProvider().Tracer("component-serviceB")
+	ctx, span := tr.Start(ctx, "zip-service")
 	v, err := QueryFastest(ctx, cep)
 	if err != nil {
+		span.End()
 		fmt.Println(err)
 		return 503, []byte(fmt.Sprintf("%v", err))
 	}
@@ -46,8 +50,10 @@ func GetTemperature(cep string) (int, []byte) {
 		}
 	}
 	if responseCode == 404 {
+		span.End()
 		return 404, []byte("can not find zipcode")
 	}
+	span.End()
 
 	_, err = configs.LoadConfig(".")
 	key := viper.GetString("KEY")
@@ -55,6 +61,8 @@ func GetTemperature(cep string) (int, []byte) {
 		log.Fatal("Couldn't read key")
 	}
 
+	ctx, span = tr.Start(ctx, "temperature-service")
+	defer span.End()
 	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", key, url.QueryEscape(city))
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

@@ -2,7 +2,7 @@
 
 Configure no arquivo .env:
 
-- chave do WheatherAPI
+- chave do WeatherAPI
 
     KEY=xxxxxxxxxxxxxxxx
 
@@ -20,8 +20,8 @@ Configure no arquivo .env:
 
     docker-compose logs --tail=1 zipkin-client
 
-4. Abra o Zipkin em 
+4. Abra o Zipkin em :
 
     http://localhost:9411/zipkin/traces/{traceId}
 
-5. Verifique os tempos de resposta do serviceA e serviceB.
+5. Verifique os tempos de resposta do zip-service e temperature-service.

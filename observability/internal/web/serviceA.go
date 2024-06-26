@@ -2,26 +2,21 @@ package web
 
 import (
 	"context"
-	"go.opentelemetry.io/otel"
 	"net/http"
 	"strings"
 )
 
-type CepProcessor func(context.Context, http.ResponseWriter, string)
+type CepProcessor func(context.Context, *http.ResponseWriter, string)
 
-func ValidateCepAndForward(ctx context.Context, w http.ResponseWriter, r *http.Request, f CepProcessor) {
-
-	tr := otel.GetTracerProvider().Tracer("component-serviceA")
-	_, span := tr.Start(ctx, "serviceA")
+func ValidateCepAndForward(ctx context.Context, w *http.ResponseWriter, r *http.Request, f CepProcessor) {
 	cep := r.FormValue("cep")
 	cep = strings.Map(keepNumerals, cep)
 	if len(cep) != 8 {
-		w.WriteHeader(422)
-		w.Write([]byte(cep))
+		(*w).WriteHeader(422)
+		(*w).Write([]byte("invalid zipcode"))
 		return
 	}
 	f(ctx, w, cep)
-	span.End()
 }
 
 func keepNumerals(r rune) rune {

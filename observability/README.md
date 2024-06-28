@@ -10,7 +10,7 @@ Configure no arquivo .env:
 
 1. Faça o build e execute a aplicação:
 
-    docker-compose up --build --detach zipkin-collector zipkin-client
+    docker-compose up --build --detach zipkin-collector zipkin-client otel-collector
     
 2. Faça um POST em http://localhost:8080/temp, passando um CEP válido no parâmetro "cep":
 

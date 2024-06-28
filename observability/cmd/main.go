@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gsusin/goexpert/observability/internal/web"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/zipkin"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
@@ -45,21 +45,17 @@ func serviceA(w http.ResponseWriter, r *http.Request) {
 }
 
 func initTracer(url string) (func(context.Context) error, error) {
-	exporter, err := zipkin.New(
-		url,
-		zipkin.WithLogger(logger),
-	)
+	exporter, err := otlptracehttp.New(context.Background(), otlptracehttp.WithEndpoint("otel-collector:4318"))
 	if err != nil {
 		return nil, err
 	}
-
 	batcher := sdktrace.NewBatchSpanProcessor(exporter)
 
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithSpanProcessor(batcher),
 		sdktrace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceName("zipkin-collector"),
+			semconv.ServiceName("otlp-collector"),
 		)),
 	)
 	otel.SetTracerProvider(tp)

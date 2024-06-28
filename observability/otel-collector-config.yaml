@@ -1,0 +1,22 @@
+receivers: 
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+extensions:
+  health_check: {}
+exporters:
+  otlp:
+    endpoint: zipkin-collector:9411
+      #endpoint: zipkin-collector:4318
+    tls:
+      insecure: true
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: []
+      exporters: [otlp]
